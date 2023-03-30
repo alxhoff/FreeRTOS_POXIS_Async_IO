@@ -189,10 +189,11 @@ void aIOCloseConn(aIO_handle_t conn)
 void aIODeinit(void)
 {
     aIO_t *iterator;
+    aIO_t *del;
 
     if (head.next) {
         for (iterator = head.next; iterator;) {
-            aIO_t *del = iterator;
+            del = iterator;
             iterator = iterator->next;
             aIOCloseConn((aIO_handle_t)del);
         }
@@ -256,7 +257,7 @@ static void aIOMQSigHandler(union sigval sv)
     }
 }
 
-int aIOMessageQueuePut(const char *mq_name, char *buffer)
+int aIOMessageQueuePut(char *mq_name, char *buffer)
 {
     mqd_t mq;
     char *full_name = calloc(strlen(mq_name) + 2, sizeof(char));
@@ -267,7 +268,7 @@ int aIOMessageQueuePut(const char *mq_name, char *buffer)
 
     free(full_name);
 
-    if ((mqd_t) - 1 == mq) {
+    if ((mqd_t) -1 == mq) {
         printf("Unable to open MQ '%s'\n", mq_name);
         return -1;
     }
@@ -298,6 +299,14 @@ int aIOSocketPut(aIO_socket_e protocol, char *s_addr, in_port_t port,
             .sin_family = AF_INET,
             .sin_port = htons(port)
     };
+
+    char *dynamic_buffer = (char *)malloc(buffer_size);
+
+    if (dynamic_buffer == NULL) {
+        goto error_dynamic_buffer_alloc;
+    }
+
+    memcpy(dynamic_buffer, buffer, buffer_size);
 
     switch (protocol) {
         case TCP:
@@ -331,10 +340,12 @@ int aIOSocketPut(aIO_socket_e protocol, char *s_addr, in_port_t port,
         goto error_connect;
     }
 
-    if (send(fd, buffer, buffer_size, 0) < 0) {
+    if (send(fd, dynamic_buffer, buffer_size, 0) < 0) {
         fprintf(stderr, "Sending to %s:%d failed\n", s_addr, port);
         goto error_send;
     }
+
+    free(dynamic_buffer);
 
     close(fd);
 
@@ -345,10 +356,11 @@ error_connect:
     close(fd);
 error_create_socket:
     PRINT_CHECK;
+error_dynamic_buffer_alloc:
     return -1;
 }
 
-aIO_handle_t aIOOpenMessageQueue(const char *name, long max_msg_num,
+aIO_handle_t aIOOpenMessageQueue(char *name, long max_msg_num,
                                  long max_msg_size,
                                  void (*callback)(size_t, char *, void *),
                                  void *args)
@@ -515,7 +527,7 @@ aIO_handle_t aIOOpenUDPSocket(char *s_addr, in_port_t port, size_t buffer_size,
         goto error_socket;
     }
 
-    printf("Configured socket on port %" PRIu16 " with FD: %d\n", port,
+    printf("Opened socket on port %" PRIu16 " with FD: %d\n", port,
            s_udp->fd);
 
     struct sigaction act = { 0 };
@@ -563,9 +575,9 @@ aIO_handle_t aIOOpenUDPSocket(char *s_addr, in_port_t port, size_t buffer_size,
 error_fcntl:
     close(s_udp->fd);
 error_socket:
-    pthread_mutex_unlock(&conn->next->lock);
     free(conn->next);
     conn->next = NULL;
+    pthread_mutex_unlock(&conn->next->lock);
 error_IO:
     return NULL;
 }

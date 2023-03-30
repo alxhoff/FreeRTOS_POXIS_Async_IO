@@ -94,10 +94,13 @@ void aIOCloseConn(aIO_handle_t conn); //TODO
  * message queue
  * @return returns 0 on success; on error, -1 is returned.
  */
-int aIOMessageQueuePut(const char *mq_name, char *buffer);
+int aIOMessageQueuePut(char *mq_name, char *buffer);
 
 /**
  * @brief Send the data stored in buffer to the socket described by s_addr and port
+ *
+ * The data to be sent is copied dynamically and then sent to the socket. As such,
+ * both static and dynamic buffers can be sent via aIOSocketPut.
  *
  * @param protocol Either UDP or TCP, @see aIO_socket_e
  * @param s_addr IP address of target client in IPv4 numbers-and-dots notation.
@@ -125,7 +128,7 @@ int aIOSocketPut(aIO_socket_e protocol, char *s_addr, in_port_t port,
  * @param args Args to be passed to the connection's callback function args Args to be passed to the connection's callback function
  * @return Handle to the created connection, or NULL
  */
-aIO_handle_t aIOOpenMessageQueue(const char *name, long max_msg_num,
+aIO_handle_t aIOOpenMessageQueue(char *name, long max_msg_num,
                                  long max_msg_size, aIO_callback_t callback,
                                  void *args);
 
