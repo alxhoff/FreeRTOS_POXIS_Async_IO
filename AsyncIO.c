@@ -188,12 +188,10 @@ void aIOCloseConn(aIO_handle_t conn)
 
 void aIODeinit(void)
 {
-    aIO_t *iterator;
-    aIO_t *del;
 
     if (head.next) {
-        for (iterator = head.next; iterator;) {
-            del = iterator;
+        for (aIO_t *iterator = head.next; iterator;) {
+            aIO_t *del = iterator;
             iterator = iterator->next;
             aIOCloseConn((aIO_handle_t)del);
         }
@@ -257,7 +255,7 @@ static void aIOMQSigHandler(union sigval sv)
     }
 }
 
-int aIOMessageQueuePut(char *mq_name, char *buffer)
+int aIOMessageQueuePut(const char *mq_name, char *buffer)
 {
     mqd_t mq;
     char *full_name = calloc(strlen(mq_name) + 2, sizeof(char));
@@ -360,7 +358,7 @@ error_dynamic_buffer_alloc:
     return -1;
 }
 
-aIO_handle_t aIOOpenMessageQueue(char *name, long max_msg_num,
+aIO_handle_t aIOOpenMessageQueue(const char *name, long max_msg_num,
                                  long max_msg_size,
                                  void (*callback)(size_t, char *, void *),
                                  void *args)
