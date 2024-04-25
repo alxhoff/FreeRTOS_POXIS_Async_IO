@@ -66,7 +66,6 @@ typedef enum { UDP, TCP } aIO_socket_e;
  */
 typedef void (*aIO_callback_t)(size_t recv_size, char *buffer, void *args);
 
-
 /**
  * @brief Function that closes all open connections
  *

@@ -294,8 +294,8 @@ int aIOSocketPut(aIO_socket_e protocol, char *s_addr, in_port_t port,
     int fd;
     struct sockaddr_in server = { .sin_addr.s_addr =
             s_addr ? inet_addr(s_addr) : 0,
-            .sin_family = AF_INET,
-            .sin_port = htons(port)
+        .sin_family = AF_INET,
+        .sin_port = htons(port)
     };
 
     char *dynamic_buffer = (char *)malloc(buffer_size);
@@ -453,8 +453,8 @@ static void aIOSocketSigHandler(int signal, siginfo_t *info, void *context)
             while ((read_size = recv(server_fd, conn->buffer,
                                      conn->buffer_size, 0)) > 0) {
                 conn->buffer[read_size <= conn->buffer_size ?
-                                       read_size :
-                                       conn->buffer_size] = '\0';
+                             read_size :
+                             conn->buffer_size] = '\0';
                 if (conn->callback)
                     (conn->callback)(read_size, conn->buffer,
                                      conn->args);
